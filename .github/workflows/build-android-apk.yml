@@ -1,0 +1,50 @@
+name: Build Android APK (MAUI)
+
+on:
+  workflow_dispatch: {}        # spustíš ručně
+  push:
+    branches: [ main ]         # (volitelné) spustí se při commitu na main
+
+jobs:
+  build-android:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui-android
+
+      - name: Install Android SDK packages
+        shell: bash
+        run: |
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Restore
+        run: dotnet restore "PATH_TO_CSPROJ"
+
+      - name: Publish APK (Release ARM64)
+        run: >
+          dotnet publish "PATH_TO_CSPROJ"
+          -f net8.0-android -c Release
+          -p:AndroidPackageFormat=apk
+          -p:RuntimeIdentifier=android-arm64
+          -p:AndroidUseSharedRuntime=false
+          -p:EmbedAssembliesIntoApk=true
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: FrontaPrace-apk
+          path: |
+            **/bin/Release/net8.0-android/android-arm64/publish/*.apk
+            **/bin/Release/net8.0-android/android-arm64/*.apk
+          if-no-files-found: warn
