@@ -29,11 +29,11 @@ jobs:
             "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
       - name: Restore
-        run: dotnet restore "PATH_TO_CSPROJ"
+        run: dotnet restore "FrontaPrace.App.csproj"
 
       - name: Publish APK (Release ARM64)
         run: >
-          dotnet publish "PATH_TO_CSPROJ"
+          dotnet publish "FrontaPrace.App.csproj"
           -f net8.0-android -c Release
           -p:AndroidPackageFormat=apk
           -p:RuntimeIdentifier=android-arm64
